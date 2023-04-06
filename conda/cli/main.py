@@ -101,7 +101,7 @@ def main_sourced(shell, *args, **kwargs):
 
 
 def main(*args, **kwargs):
-    '''
+    """
     Read command line arguments, if no arguments are passed directly into the function.
     
     If the first argument starts with "shell.", call the main_sourced function with the
@@ -111,7 +111,7 @@ def main(*args, **kwargs):
     Otherwise, call the main_subshell function with the cleaned positional arguments and 
     passed in keyword arguments. Handle exceptions using the ExceptionHandler class, 
     via conda_exception_handler.
-    '''
+    """
     # conda.common.compat contains only stdlib imports
     from ..common.compat import ensure_text_type
     from ..exceptions import conda_exception_handler
