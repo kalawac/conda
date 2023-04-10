@@ -1,11 +1,10 @@
-# Flowchart of Activation Process
+# Flowcharts of Activation Process
 
 ```mermaid
 %%{init: {"flowchart": {"htmlLabels": false}} }%%
 flowchart TD
 	start1(["`run **conda shell.bash activate** using the CLI`"])
 	start2(["`run **python -m conda shell.bash activate** using the CLI`"])
-	start3(["`run **conda activate** using the CLI`"])
 	
 	s2i["`**__main__.py**: call **main** function in conda executable`"]
 	m1["`**main**: parse CLI input`"]
@@ -148,4 +147,20 @@ flowchart TD
 	m13 --> m14
 
 	m14 --> End1
+```
+
+```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+flowchart TD
+	start(["`run **conda activate** using the CLI`"])
+
+	m1["`**conda** shell function: call **__conda_activate** if the CLI argument \n following 'conda' is 'activate' or 'deactivate' (with nothing else following)`"]
+	
+	m2["`**__conda_activate** shell function: call **__conda_exe shell.posix** \n (that is, call **main** in **main.py** with the input 'shell.posix' \n -- which will start the same process outlined in the flowchart above)`"]
+
+	End1(["`return successful exit code or handle errors that have occurred during the process`"])
+
+	start --> m1
+	m1 --> m2
+	m2 --> End1
 ```
