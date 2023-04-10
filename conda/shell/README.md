@@ -1,5 +1,6 @@
 # Flowcharts of Activation Process
 
+## Run `conda shell.bash activate` from the CLI
 ```mermaid
 %%{init: {"flowchart": {"htmlLabels": false}} }%%
 flowchart TD
@@ -23,7 +24,7 @@ flowchart TD
 
 	m6["`call *_Activator's* **execute** method and print the result to the terminal. \n End with an empty string rather than with a new line.`"]
 
-	m7["`**_Activator.execute**: calls *_Activator's* **_parse_and_set_args** method with any CLI arguments passed into the class at initialization)`"]
+	m7["`**_Activator.execute**: calls *_Activator's* **_parse_and_set_args** method with any CLI arguments passed into the class at initialization`"]
 	
 	m7.D{"`**_Activator._parse_and_set_args**: \n Is the arguments list missing or empty?`"}
 	m7.D1["`Raise error and send a warning / informational message to the command line, using \n the **raise_invalid_command_error** helper function`"]
@@ -149,6 +150,7 @@ flowchart TD
 	m14 --> End1
 ```
 
+## Run `conda activate` from the CLI
 ```mermaid
 %%{init: {"flowchart": {"htmlLabels": false}} }%%
 flowchart TD
