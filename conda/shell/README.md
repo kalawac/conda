@@ -165,4 +165,10 @@ flowchart TD
 	m4["`evaluate commands printed to stdout`"]
 
 	End1(["`return successful exit code or handle errors that have occurred during the process`"])
+
+	start --> m1
+	m1 --> m2
+	m2 --> m3
+	m3 --> m4
+	m4 --> End1
 ```
