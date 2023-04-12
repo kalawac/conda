@@ -110,14 +110,14 @@ flowchart TD
 	m8.Diii -. yes .-> m7.D1
 	m8.Diii -- "no: 'activate'" --> m8.Div
 
-	m8.Div -. yes .-> m9
-	m8.Div -- no --> m8.Dv
+	m8.Div -- yes --> m9
+	m8.Div -. no .-> m8.Dv
 	
-	m9 -.-> m9.D
+	m9 --> m9.D
 	
-	m9.D -. no .-> m9.D1
+	m9.D -- no --> m9.D1
 	m9.D -. yes .-> m9.D2
-	m9.D1 -.-> m8.Dv
+	m9.D1 --> m8.Dv
 	m9.D2 -.-> m8.Dv
 
 	m8.Dv -- yes --> m8.Dv.1
@@ -158,11 +158,11 @@ flowchart TD
 
 	m1["`**conda** shell function: call **__conda_activate** if the CLI argument \n following 'conda' is 'activate' or 'deactivate' (with nothing else following)`"]
 	
-	m2["`**__conda_activate** shell function: call **__conda_exe shell.posix** \n (that is, call **main** in **main.py** with the input 'shell.posix' \n -- which will start the same process outlined in the flowchart above)`"]
+	m2["`**__conda_activate** shell function: call **__conda_exe shell.posix** with all additional inputted arguments \n -- that is, call **main** in **main.py** with the input 'shell.posix' followed by all the other user-inputted args`"]
+
+	m3[["`run conda shell.posix activate [args] (see other flowchart)`"]]
+
+	m4["`evaluate commands printed to stdout`"]
 
 	End1(["`return successful exit code or handle errors that have occurred during the process`"])
-
-	start --> m1
-	m1 --> m2
-	m2 --> End1
 ```
