@@ -1,5 +1,102 @@
 # Flowcharts of Activation Process
 
+## Function calls
+```mermaid
+flowchart TD
+	start(["user runs `conda activate`, followed by an appropriate prefix or environment name, via the CLI"])
+
+	m1["`conda` shell function: call `__conda_activate` shell function"]
+	
+	m2["`__conda_activate` shell function: call `__conda_exe`, with an argument specifying the type of shell, along with all arguments from user CLI input"]
+
+	m3["`main`: parse and clean CLI input, call `main_sourced`, passing in all cleaned arguments"]
+
+	m4["`main_sourced`: initialize context and context logging, call `_build_activator_cls` function for specified shell"]
+
+	m5["`_build_activator_cls`: return type object containing the activator class for the specified shell`"]
+
+	m6["`main_sourced`: create an instance of the relevant activator class and pass in all arguments"]
+
+	m7["`main_sourced`: call the `_Activator.execute` method, via the activator class instance"]
+
+	m8["`_Activator.execute`: call the `_Activator._parse_and_set_args` method with any CLI arguments passed into the class at initialization"]
+
+	m9["`_Activator._parse_and_set_args`: parse arguments to determine what process the user requires and whether there are any argument errors"]
+
+	m10["`_Activator._parse_and_set_args`: set `self.command` to the desired command (that is, `activate`, `deactivate`, `reactivate` `commands` or `hook`)"]
+
+	m11["`_Activator.execute`: call the `_Activator` method with the value assigned to `self.command` -- in this case, `_Activator.activate`"]
+
+	m12["`_Activator.activate`: call `_Activator._build_activate_stack` with the user-supplied environment name or prefix and the `stack` argument set to True/False, depending on the value of `self.stack` "]
+	
+	m13["`_Activator._build_activate_stack`: Return dictionary with key-value pairs containing the environmental variables to be set, unset, and exported, as well as any scripts to be run on activation or deactivation (as relevant)"]
+
+	m14["`_Activator.activate`: Assign dictionary returned by `_Activator._build_activate_stack` to `builder_result`"]
+
+	m15["`_Activator.activate`: Call `_Activator._yield_commands` and pass in `builder_result`"]
+
+	m16["`_Activator._yield_commands`: Format the values in the `builder_result` dictionary so that they can be read by the relevant shell (using the template variables set in the relevant shell’s activator class)"]
+
+	m17["`_Activator._yield_commands`: Use `yield` to return, in order, the formatted: export path, deactivate scripts, environment variables to be unset, environment variables to be set, environment variables to be exported, activate scripts"]
+
+	m18["`_Activator.activate`: Call `_Activator._finalize` and pass in the yielded return values and the relevant temporary file extension, if one exists`"]
+	
+	m19["`_Activator._finalize`: Return a string that contains all the elements in the commands iterable, joined together using the string separator assigned to self.command_join, or a temporary file that contains this string"]
+	
+	m20["`**_Activator.execute**: return the return value from **_Activator.activate**`"]
+
+	m21["`**main_sourced**: print the return value from **_Activator.execute** to the terminal. \n End with an empty string rather than with a new line`"]
+	
+	End1(["return successful exit code or raise errors that have occurred during the process"])
+
+
+	start --> m1
+	m1 --> m2
+	m2 --> m3
+	m3 --> m4
+	m4 --> m5
+	m5 --> m6
+	m6 --> m7
+	m7 --> m8
+	m8 --> m9
+	m9 --> m10
+	m10 --> m11
+	m11 --> m12
+	m12 --> m13
+	m13 --> m14
+	m14 --> m15
+	m15 --> m16
+	m16 --> m17
+	m17 --> m18
+	m18 --> m19
+	m19 --> End1
+```
+
+
+
+## Run `conda activate` from the CLI
+```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+flowchart TD
+	start(["`run **conda activate env_name** using the CLI`"])
+
+	m1["`**conda** shell function: call **__conda_activate** if the CLI argument \n following 'conda' is 'activate' or 'deactivate'`"]
+	
+	m2["`**__conda_activate** shell function: call **__conda_exe shell.posix** with all additional arguments from \n user CLI input -- in this case, call **main** in **main.py** with the arguments 'shell.posix activate env_name'`"]
+
+	m3[["`run the conda executable's entry point; current CLI arguments = *shell.posix activate env_name* (see other flowchart)`"]]
+
+	m4["`evaluate commands printed to stdout`"]
+
+	End1(["`return successful exit code or raise errors that have occurred during the process`"])
+
+	start --> m1
+	m1 --> m2
+	m2 --> m3
+	m3 --> m4
+	m4 --> End1
+```
+
 ## Run `conda shell.bash activate` from the CLI
 ```mermaid
 %%{init: {"flowchart": {"htmlLabels": false}} }%%
@@ -170,27 +267,4 @@ flowchart TD
 	m49 --> m50
 
 	m50 --> End1
-```
-
-## Run `conda activate` from the CLI
-```mermaid
-%%{init: {"flowchart": {"htmlLabels": false}} }%%
-flowchart TD
-	start(["`run **conda activate env_name** using the CLI`"])
-
-	m1["`**conda** shell function: call **__conda_activate** if the CLI argument \n following 'conda' is 'activate' or 'deactivate'`"]
-	
-	m2["`**__conda_activate** shell function: call **__conda_exe shell.posix** with all additional arguments from \n user CLI input -- in this case, call **main** in **main.py** with the arguments 'shell.posix activate env_name'`"]
-
-	m3[["`run the conda executable's entry point; current CLI arguments = *shell.posix activate env_name* (see other flowchart)`"]]
-
-	m4["`evaluate commands printed to stdout`"]
-
-	End1(["`return successful exit code or raise errors that have occurred during the process`"])
-
-	start --> m1
-	m1 --> m2
-	m2 --> m3
-	m3 --> m4
-	m4 --> End1
 ```
