@@ -41,11 +41,11 @@ flowchart TD
 
 	m18["`_Activator.activate`: Call `_Activator._finalize` and pass in the yielded return values and the relevant temporary file extension, if one exists`"]
 	
-	m19["`_Activator._finalize`: Return a string that contains all the elements in the commands iterable, joined together using the string separator assigned to self.command_join, or a temporary file that contains this string"]
+	m19["`_Activator._finalize`: Return a string that contains all the commands to be evaluated, joined together using the string separator assigned to self.command_join, or a temporary file that contains this string"]
 	
-	m20["`**_Activator.execute**: return the return value from **_Activator.activate**`"]
+	m20["`_Activator.execute`: return the return value from `_Activator.activate`"]
 
-	m21["`**main_sourced**: print the return value from **_Activator.execute** to the terminal. \n End with an empty string rather than with a new line`"]
+	m21["`main_sourced`: print the return value from `_Activator.execute` to the terminal. End with an empty string rather than with a new line"]
 	
 	End1(["return successful exit code or raise errors that have occurred during the process"])
 
