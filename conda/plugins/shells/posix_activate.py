@@ -1,5 +1,6 @@
 # Copyright (C) 2012 Anaconda, Inc
 # SPDX-License-Identifier: BSD-3-Clause
+import argparse
 import re
 import sys
 from os.path import join
@@ -8,10 +9,10 @@ from conda import CONDA_PACKAGE_ROOT
 from conda.activate import _Activator, native_path_to_unix
 from conda.base.context import context
 from conda.cli.main import init_loggers
-from conda.common.compat import ensure_text_type, on_win
-from conda.exceptions import conda_exception_handler
+from conda.common.compat import on_win
+from conda.exceptions import ArgumentError, conda_exception_handler
 
-from .. import CondaShellPlugins, hookimpl
+from .. import CondaShellPlugins, CondaSubcommand, hookimpl
 
 
 class PosixPluginActivator(_Activator):
@@ -72,6 +73,71 @@ class PosixPluginActivator(_Activator):
         return "\n".join(result) + "\n"
 
 
+def get_parsed_args(argv: "list[str]") -> argparse.Namespace:
+    """
+    Parse CLI arguments to determine desired command.
+    Create namespace with 'command' and 'env' keys.
+    """
+    parser = argparse.ArgumentParser(
+        "conda",
+        description="Process conda activate, deactivate, and reactivate",
+    )
+
+    parser.add_argument(
+        "command",
+        metavar="c",
+        type=str,
+        nargs=1,
+        help="the command to be run: 'act', 'deact' or 'react'",
+    )
+
+    parser.add_argument(
+        "env",
+        metavar="env",
+        default=None,
+        type=str,
+        nargs="?",
+        help="the name or prefix of the environment to be activated",
+    )
+
+    args = parser.parse_args(argv)
+
+    return args
+
+
+def get_command_args(args: argparse.Namespace) -> "tuple[str, str | None]":
+    """
+    Return the commands in the namespace as a tuple.
+    Produce appropriate error message if command is not
+    one that can be handled by the plugin.
+    """
+    command = args.command[0]
+
+    if command not in ("act", "deact", "react"):
+        raise_invalid_command_error(actual_command=command)
+    elif command == "act":
+        command = "activate"
+    elif command == "deact":
+        command = "deactivate"
+    else:
+        command = "reactivate"
+
+    env = args.env
+
+    return (command, env)
+
+
+def raise_invalid_command_error(actual_command=None):
+    """
+    Raise an error message on the CLI if a command other than 'act',
+    'deact' or 'react' is given.
+    """
+    message = "'act', 'deact', or 'react'" "command must be given"
+    if actual_command:
+        message += ". Instead got '%s'." % actual_command
+    raise ArgumentError(message)
+
+
 def handle_env(*args, **kwargs):
     """
     Export existing activate/reactivate/deactivate logic to a plugin.
@@ -80,10 +146,9 @@ def handle_env(*args, **kwargs):
     A similar process to conda init would inject code into the user's shell profile
     to set the associated shell script as conda's entry point.
     """
-    # cleanup argv
-    # this can be updated to use argparse, in line with the os_exec approach
-    env_args = sys.argv[2:]  # drop executable/script and sub-command
-    env_args = tuple(ensure_text_type(s) for s in env_args)
+    args = get_parsed_args(sys.argv[1:])
+    command, env = get_command_args(args)
+    env_args = (command, env) if env else (command,)
 
     context.__init__()
     init_loggers(context)
@@ -104,9 +169,18 @@ def handle_exceptions(*args, **kwargs):
 
 
 @hookimpl
+def conda_subcommands():
+    yield CondaSubcommand(
+        name="posix_plugin_current_logic",
+        summary="Plugin for POSIX shells: handles conda activate, deactivate, and reactivate",
+        action=handle_exceptions,
+    )
+
+
+@hookimpl
 def conda_shell_plugins():
     yield CondaShellPlugins(
         name="posix_plugin_current_logic",
         summary="Plugin for POSIX shells: handles conda activate, deactivate, and reactivate",
-        action=handle_exceptions,
+        activator=PosixPluginActivator,
     )
