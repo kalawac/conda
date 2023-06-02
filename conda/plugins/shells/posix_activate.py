@@ -79,7 +79,7 @@ def get_parsed_args(argv: list[str]) -> argparse.Namespace:
     Create namespace with 'command' and 'env' keys.
     """
     parser = argparse.ArgumentParser(
-        "conda posix_plugin_with_shell",
+        "conda posix_plugin_current_logic",
         description="Process conda activate, deactivate, and reactivate",
     )
 
