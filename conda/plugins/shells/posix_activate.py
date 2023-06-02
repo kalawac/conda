@@ -73,25 +73,20 @@ class PosixPluginActivator(_Activator):
         return "\n".join(result) + "\n"
 
 
-def get_parsed_args(argv: "list[str]") -> argparse.Namespace:
+def get_parsed_args(argv: list[str]) -> argparse.Namespace:
     """
     Parse CLI arguments to determine desired command.
     Create namespace with 'command' and 'env' keys.
     """
     parser = argparse.ArgumentParser(
-        "conda",
+        "conda posix_plugin_with_shell",
         description="Process conda activate, deactivate, and reactivate",
     )
 
-    parser.add_argument(
-        "command",
-        metavar="c",
-        type=str,
-        nargs=1,
-        help="the command to be run: 'act', 'deact' or 'react'",
-    )
+    commands = parser.add_subparsers(required=True, dest="command")
 
-    parser.add_argument(
+    activate = commands.add_parser("act")
+    activate.add_argument(
         "env",
         metavar="env",
         default=None,
@@ -99,6 +94,9 @@ def get_parsed_args(argv: "list[str]") -> argparse.Namespace:
         nargs="?",
         help="the name or prefix of the environment to be activated",
     )
+
+    commands.add_parser("deact")
+    commands.add_parser("react")
 
     args = parser.parse_args(argv)
 
