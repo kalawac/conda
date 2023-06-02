@@ -103,27 +103,17 @@ def get_parsed_args(argv: list[str]) -> argparse.Namespace:
     return args
 
 
-def get_command_args(args: argparse.Namespace) -> "tuple[str, str | None]":
+def get_command_args(args: argparse.Namespace) -> tuple[str, str | None]:
     """
     Return the commands in the namespace as a tuple.
-    Produce appropriate error message if command is not
-    one that can be handled by the plugin.
     """
-    command = args.command[0]
+    command = args.command
+    env = getattr(args, "env", None)
 
-    if command not in ("act", "deact", "react"):
-        raise_invalid_command_error(actual_command=command)
-    elif command == "act":
-        command = "activate"
-    elif command == "deact":
-        command = "deactivate"
-    else:
-        command = "reactivate"
-
-    env = args.env
+    command = {"act": "activate", "deact": "deactivate", "react": "reactivate"}[command]
 
     return (command, env)
-
+    
 
 def raise_invalid_command_error(actual_command=None):
     """
