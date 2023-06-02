@@ -82,9 +82,15 @@ def get_parsed_args(argv: list[str]) -> argparse.Namespace:
         description="Process conda activate, deactivate, and reactivate",
     )
 
-    commands = parser.add_subparsers(required=True, dest="command")
+    commands = parser.add_subparsers(
+        required=True,
+        dest="command",
+    )
 
-    activate = commands.add_parser("act")
+    activate = commands.add_parser(
+        "activate",
+        help="activate the specified environment or base if no environment is specified",
+    )
     activate.add_argument(
         "env",
         metavar="env",
@@ -93,25 +99,17 @@ def get_parsed_args(argv: list[str]) -> argparse.Namespace:
         nargs="?",
         help="the name or prefix of the environment to be activated",
     )
+    # TODO: add --stack and --no-stack flags
 
-    commands.add_parser("deact")
-    commands.add_parser("react")
+    commands.add_parser("deactivate", help="deactivate the current environment")
+    commands.add_parser(
+        "reactivate",
+        help="reactivate the current environment, updating environment variables",
+    )
 
     args = parser.parse_args(argv)
 
     return args
-
-
-def get_command_args(args: argparse.Namespace) -> tuple[str, str | None]:
-    """
-    Return the commands in the namespace as a tuple.
-    """
-    command = args.command
-    env = getattr(args, "env", None)
-
-    command = {"act": "activate", "deact": "deactivate", "react": "reactivate"}[command]
-
-    return (command, env)
 
 
 def get_activate_builder(activator):
@@ -182,8 +180,8 @@ def posix_plugin_with_shell(argv: list[str]) -> SystemExit:
     child class is called.
     """
     args = get_parsed_args(argv)
-    command, env = get_command_args(args)
-    env_args = (command, env) if env else (command,)
+    env = getattr(args, "env", None)
+    env_args = (args.command, env) if env else (args.command,)
 
     context.__init__()
     init_loggers(context)
@@ -201,12 +199,12 @@ def posix_plugin_with_shell(argv: list[str]) -> SystemExit:
     # after decision made on plugin architecture, I will probably update '_parse_and_set_args'
     # to use argparse instead of custom argument parsing logic
 
-    if command == "activate":
+    if args.command == "activate":
         # using redefined activate process instead of _Activator.activate
         cmds_dict = get_activate_builder(activator)
-    elif command == "deactivate":
+    elif args.command == "deactivate":
         cmds_dict = activator.build_deactivate()
-    elif command == "reactivate":
+    elif args.command == "reactivate":
         cmds_dict = activator.build_reactivate()
 
     return activate(activator, cmds_dict)

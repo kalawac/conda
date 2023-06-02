@@ -1,5 +1,7 @@
 # Copyright (C) 2012 Anaconda, Inc
 # SPDX-License-Identifier: BSD-3-Clause
+from __future__ import annotations
+
 import argparse
 import re
 import sys
@@ -10,7 +12,7 @@ from conda.activate import _Activator, native_path_to_unix
 from conda.base.context import context
 from conda.cli.main import init_loggers
 from conda.common.compat import on_win
-from conda.exceptions import ArgumentError, conda_exception_handler
+from conda.exceptions import conda_exception_handler
 
 from .. import CondaShellPlugins, CondaSubcommand, hookimpl
 
@@ -72,6 +74,15 @@ class PosixPluginActivator(_Activator):
                 result.append(self.export_var_tmpl % (key, value))
         return "\n".join(result) + "\n"
 
+    def _parse_and_set_args(self, arguments):
+        """
+        Pass in the args object, which will be the parsed args namespace
+        TODO: make the simplified version of _parse_and_set_args here,
+            where I grab items from the namespace and follow the code logic in the if statements
+        TODO: Share on Monday as a code snippet / link to PR (if I don't finish it, that's fine)
+        """
+        return super()._parse_and_set_args(arguments)
+
 
 def get_parsed_args(argv: list[str]) -> argparse.Namespace:
     """
@@ -79,13 +90,19 @@ def get_parsed_args(argv: list[str]) -> argparse.Namespace:
     Create namespace with 'command' and 'env' keys.
     """
     parser = argparse.ArgumentParser(
-        "conda posix_plugin_current_logic",
+        "posix_plugin_current_logic",
         description="Process conda activate, deactivate, and reactivate",
     )
 
-    commands = parser.add_subparsers(required=True, dest="command")
+    commands = parser.add_subparsers(
+        required=True,
+        dest="command",
+    )
 
-    activate = commands.add_parser("act")
+    activate = commands.add_parser(
+        "activate",
+        help="activate the specified environment or base if no environment is specified",
+    )
     activate.add_argument(
         "env",
         metavar="env",
@@ -94,11 +111,18 @@ def get_parsed_args(argv: list[str]) -> argparse.Namespace:
         nargs="?",
         help="the name or prefix of the environment to be activated",
     )
+    # TODO: add --stack and --no-stack flags
 
-    commands.add_parser("deact")
-    commands.add_parser("react")
+    commands.add_parser("deactivate", help="deactivate the current environment")
+    commands.add_parser(
+        "reactivate",
+        help="reactivate the current environment, updating environment variables",
+    )
 
-    args = parser.parse_args(argv)
+    try:
+        args = parser.parse_args(argv)
+    except BaseException:
+        raise SystemExit(1)
 
     return args
 
@@ -110,20 +134,9 @@ def get_command_args(args: argparse.Namespace) -> tuple[str, str | None]:
     command = args.command
     env = getattr(args, "env", None)
 
-    command = {"act": "activate", "deact": "deactivate", "react": "reactivate"}[command]
+    command_args = (command, env) if env else (command,)
 
-    return (command, env)
-    
-
-def raise_invalid_command_error(actual_command=None):
-    """
-    Raise an error message on the CLI if a command other than 'act',
-    'deact' or 'react' is given.
-    """
-    message = "'act', 'deact', or 'react'" "command must be given"
-    if actual_command:
-        message += ". Instead got '%s'." % actual_command
-    raise ArgumentError(message)
+    return command_args
 
 
 def handle_env(*args, **kwargs):
@@ -134,14 +147,12 @@ def handle_env(*args, **kwargs):
     A similar process to conda init would inject code into the user's shell profile
     to set the associated shell script as conda's entry point.
     """
-    args = get_parsed_args(sys.argv[1:])
-    command, env = get_command_args(args)
-    env_args = (command, env) if env else (command,)
+    args = get_parsed_args(sys.argv[2:])
 
     context.__init__()
     init_loggers(context)
 
-    activator = PosixPluginActivator(env_args)
+    activator = PosixPluginActivator(args)
     print(activator.execute(), end="")
 
     return 0
