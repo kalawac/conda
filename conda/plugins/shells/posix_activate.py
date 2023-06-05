@@ -77,6 +77,7 @@ class PosixPluginActivator(_Activator):
                 result.append(self.export_var_tmpl % (key, value))
         return "\n".join(result) + "\n"
 
+
     # this will be in _Activate parent class logic once architecture is decided
     def _parse_and_set_args(self, args: argparse.Namespace) -> None:
         """
